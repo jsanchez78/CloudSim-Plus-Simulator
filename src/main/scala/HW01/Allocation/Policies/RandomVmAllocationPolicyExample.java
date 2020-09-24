@@ -1,6 +1,28 @@
-package HW01.Allocation.Policies;
+package HW01.Allocation.Policies;/*
+ * CloudSim Plus: A modern, highly-extensible and easier-to-use Framework for
+ * Modeling and Simulation of Cloud Computing Infrastructures and Services.
+ * http://cloudsimplus.org
+ *
+ *     Copyright (C) 2015-2018 Universidade da Beira Interior (UBI, Portugal) and
+ *     the Instituto Federal de Educação Ciência e Tecnologia do Tocantins (IFTO, Brazil).
+ *
+ *     This file is part of CloudSim Plus.
+ *
+ *     CloudSim Plus is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     CloudSim Plus is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with CloudSim Plus. If not, see <http://www.gnu.org/licenses/>.
+ */
 
-import ch.qos.logback.core.util.TimeUtil;
+import HW01.Util.TimeUtil;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicy;
@@ -22,7 +44,6 @@ import org.cloudbus.cloudsim.resources.Pe;
 import org.cloudbus.cloudsim.resources.PeSimple;
 import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.schedulers.vm.VmSchedulerTimeShared;
-
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModel;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelDynamic;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelFull;
@@ -50,7 +71,7 @@ import java.util.Optional;
  * @author Manoel Campos da Silva Filho
  * @since CloudSim Plus 4.0.5
  */
-public class VMAllocationRandom {
+public class RandomVmAllocationPolicyExample {
     static Integer HOSTS;
     static Integer HOST_PES;
     static Integer VMS;
@@ -58,6 +79,9 @@ public class VMAllocationRandom {
     static Integer CLOUDLETS;
     static Integer CLOUDLET_PES;
     static Integer CLOUDLET_LENGTH;
+    static Integer ram;
+    final Integer bw;
+    final Integer storage;
 
     private final CloudSim simulation;
     private DatacenterBroker broker0;
@@ -65,17 +89,17 @@ public class VMAllocationRandom {
     private List<Cloudlet> cloudletList;
     private Datacenter datacenter0;
 
-    /** A random number generator that returns values between [-1 .. 1],
+     /** A random number generator that returns values between [-1 .. 1],
      * according to the {@link Comparator#compare(Object, Object)} method used
      * to randomly sort Hosts to be allocated to VMs.
      */
     private final ContinuousDistribution random;
 
     public static void main(String[] args) {
-        new VMAllocationRandom();
+        new RandomVmAllocationPolicyExample();
     }
 
-    private VMAllocationRandom() {
+    private RandomVmAllocationPolicyExample() {
         Config config = ConfigFactory.load("inputs.conf");
         HOSTS = Integer.parseInt(config.getString("default.HOSTS"));
         HOST_PES = Integer.parseInt(config.getString("default.HOST_PES"));
@@ -84,8 +108,10 @@ public class VMAllocationRandom {
         CLOUDLETS = Integer.parseInt(config.getString("default.CLOUDLETS"));
         CLOUDLET_PES = Integer.parseInt(config.getString("default.CLOUDLET_PES"));
         CLOUDLET_LENGTH = Integer.parseInt(config.getString("default.CLOUDLET_LENGTH"));
-        
-        final double startSecs = CloudSim.NULL.getMinTimeBetweenEvents();
+        ram = Integer.parseInt(config.getString("default.ram")); //in Megabytes
+        storage = Integer.parseInt(config.getString("default.storage"));
+        bw = Integer.parseInt(config.getString("default.bw"));; //in Megabits/s
+        final double startSecs = TimeUtil.currentTimeSecs();
         //Enables just some level of log messages.
         Log.setLevel(ch.qos.logback.classic.Level.WARN);
 
@@ -107,7 +133,7 @@ public class VMAllocationRandom {
         final List<Cloudlet> finishedCloudlets = broker0.getCloudletFinishedList();
         finishedCloudlets.sort(Comparator.comparingLong(cloudlet -> cloudlet.getVm().getId()));
         new CloudletsTableBuilder(finishedCloudlets).build();
-        System.out.println("Execution time: " );
+        System.out.println("Execution time: " + TimeUtil.secondsToStr(TimeUtil.elapsedSeconds(startSecs)));
     }
 
     /**
@@ -143,9 +169,9 @@ public class VMAllocationRandom {
     private Optional<Host> findRandomSuitableHostForVm(final VmAllocationPolicy vmAllocationPolicy, final Vm vm) {
         final List<Host> hostList = vmAllocationPolicy.getHostList();
         /* Despite the loop is bound to the number of Hosts inside the List,
-         *  the index "i" is not used to get a Host at that position,
-         *  but just to define that the maximum number of tries to find a
-         *  suitable Host will be the number of available Hosts.*/
+        *  the index "i" is not used to get a Host at that position,
+        *  but just to define that the maximum number of tries to find a
+        *  suitable Host will be the number of available Hosts.*/
         for (int i = 0; i < hostList.size(); i++){
             final int randomIndex = (int)(random.sample() * hostList.size());
             final Host host = hostList.get(randomIndex);

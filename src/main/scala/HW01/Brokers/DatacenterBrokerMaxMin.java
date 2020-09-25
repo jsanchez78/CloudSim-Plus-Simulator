@@ -41,7 +41,6 @@ public class DatacenterBrokerMaxMin extends DatacenterBrokerSimple {
     private List<Cloudlet> mapCloudlets(List<Cloudlet> cloudletList, List<Vm> VM_list){
         Map<Cloudlet, Double> mapped_cloudlets = new HashMap<>();
         for(Cloudlet c: cloudletList){
-            /* TODO: */
             mapped_cloudlets.put(c, getMinTimeToExecuteCloudlet(c,VM_list));
         }
         // SORT Map w/ value in ASC Order
@@ -49,6 +48,7 @@ public class DatacenterBrokerMaxMin extends DatacenterBrokerSimple {
                         .stream()
                 .sorted((Map.Entry.<Cloudlet, Double>comparingByValue().reversed()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        // Get List of Cloudlets sorted by Execution Time
         List<Cloudlet> sorted_cloudlets = sorted_map.keySet().stream()
                 .collect(Collectors.toList());
         return sorted_cloudlets;

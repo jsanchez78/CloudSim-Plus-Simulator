@@ -149,6 +149,7 @@ public class VmAllocationPolicyRoundRobinExample {
     }
 
     /**
+     * 
      * Creates a list of VMs.
      */
     private List<Vm> createVms() {

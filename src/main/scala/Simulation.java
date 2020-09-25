@@ -1,5 +1,7 @@
+import HW01.Simulation.BasicFirstExample;
+
 public class Simulation {
     public static void main(String[] args){
-        System.out.println(args);
+        new BasicFirstExample();
     }
 }

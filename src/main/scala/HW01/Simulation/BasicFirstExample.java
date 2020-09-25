@@ -5,6 +5,8 @@ import HW01.Brokers.DatacenterBrokerMaxMin;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicy;
+import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyBestFit;
+import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyFirstFit;
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicySimple;
 import org.cloudbus.cloudsim.brokers.DatacenterBroker;
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple;
@@ -12,43 +14,50 @@ import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.cloudlets.CloudletSimple;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.datacenters.Datacenter;
+import org.cloudbus.cloudsim.datacenters.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.datacenters.DatacenterSimple;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.hosts.HostSimple;
 import org.cloudbus.cloudsim.provisioners.ResourceProvisionerSimple;
-import org.cloudbus.cloudsim.resources.Bandwidth;
 import org.cloudbus.cloudsim.resources.Pe;
 import org.cloudbus.cloudsim.resources.PeSimple;
+import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.schedulers.vm.VmSchedulerTimeShared;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModel;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelDynamic;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelFull;
+import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelStochastic;
 import org.cloudbus.cloudsim.vms.Vm;
 import org.cloudbus.cloudsim.vms.VmSimple;
 import org.cloudsimplus.builders.tables.CloudletsTableBuilder;
-import scala.Int;
+import org.cloudsimplus.builders.tables.TextTableColumn;
+import org.cloudsimplus.listeners.EventInfo;
+
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class BasicFirstExample {
-    
+
     private final CloudSim simulation;
     private DatacenterBroker broker0;
     private List<Vm> vmList;
     private List<Cloudlet> cloudletList;
     private Datacenter datacenter0;
-
+    private DatacenterCharacteristics datacenterCharacteristic0;
 
     private final CloudSim simulation1;
     private DatacenterBroker broker1;
     private List<Vm> vmList1;
     private List<Cloudlet> cloudletList1;
     private Datacenter datacenter1;
+    private DatacenterCharacteristics datacenterCharacteristic1;
 
-
-
-
+    private final CloudSim simulation2;
+    private DatacenterBroker broker2;
+    private List<Vm> vmList2;
+    private List<Cloudlet> cloudletList2;
+    private Datacenter datacenter2;
+    private DatacenterCharacteristics datacenterCharacteristic2;
 
     static Integer HOSTS;
     static Integer HOST_PES;
@@ -70,14 +79,14 @@ public class BasicFirstExample {
     static Integer CLOUDLET_SET_SIZE;
     static List<Integer> CLOUDLET_dynamic;
 
+    // Cost
+    static List<Integer> cost;
 
-    
-    
     public static void main(String[] args) {
         new BasicFirstExample();
     }
 
-    private BasicFirstExample() {
+    public BasicFirstExample() {
         /*Enables just some level of log messages.
           Make sure to import org.cloudsimplus.util.Log;*/
         //Log.setLevel(ch.qos.logback.classic.Level.WARN);
@@ -105,40 +114,103 @@ public class BasicFirstExample {
         CLOUDLET_SET_SIZE = VM_STORAGE = Integer.parseInt(config.getString("jdbc.CLOUDLET_SET_SIZE"));
         CLOUDLET_dynamic = config.getIntList("jdbc.CLOUDLET_dynamic");
 
+        cost = config.getIntList("jdbc.cost");
+
 
         simulation = new CloudSim();
         simulation1 = new CloudSim();
+        simulation2 = new CloudSim();
 
-        Datacenter datacenter0 = createDatacenter();
-        Datacenter datacenter1 = createDatacenter1();
+
+
+        datacenter0 = createDatacenter();
+        datacenter1 = createDatacenter1();
+        datacenter2 = createDatacenter2();
 
         //Creates a broker that is a software acting on behalf a cloud customer to manage his/her VMs and Cloudlets
         broker0 = new DatacenterBrokerSimple(simulation);
-        broker1 = new DatacenterBrokerMaxMin(simulation1);
-        broker0.setVmDestructionDelayFunction(vm -> 30.0);
+        broker1 = new DatacenterBrokerSimple(simulation1);
+        broker2 = new DatacenterBrokerMaxMin(simulation2);
 
         vmList = createVms();
         vmList1 = createVms();
-
+        vmList2 = createVms();
 
         cloudletList = createCloudlets_dynamic(CLOUDLET_dynamic, CLOUDLET_dynamic.size());
-        cloudletList1 = createCloudlets_dynamic(CLOUDLET_dynamic, CLOUDLET_dynamic.size());
+        cloudletList1 = createCloudlets_dynamic2(CLOUDLET_dynamic, CLOUDLET_dynamic.size());
+        cloudletList2 = createCloudlets_dynamic3(CLOUDLET_dynamic, CLOUDLET_dynamic.size());
 
         broker0.submitVmList(vmList);
         broker1.submitVmList(vmList1);
+        broker2.submitVmList(vmList2);
 
         broker0.submitCloudletList(cloudletList);
         broker1.submitCloudletList(cloudletList1);
+        broker2.submitCloudletList(cloudletList2);
 
         simulation.start();
         simulation1.start();
-
+        simulation2.start();
 
         final List<Cloudlet> finishedCloudlets = broker0.getCloudletFinishedList();
         final List<Cloudlet> finishedCloudlets1 = broker1.getCloudletFinishedList();
+        final List<Cloudlet> finishedCloudlets2 = broker2.getCloudletFinishedList();
 
         new CloudletsTableBuilder(finishedCloudlets).build();
         new CloudletsTableBuilder(finishedCloudlets1).build();
+        new CloudletsTableBuilder(finishedCloudlets2).build();
+
+        print_cost_statistics(cloudletList);
+        print_cost_statistics(cloudletList1);
+        print_cost_statistics(cloudletList2);
+    }
+    private void print_cost_statistics(List<Cloudlet> cloudletList){
+        new CloudletsTableBuilder(cloudletList).setTitle("Simulation Results: Broker0")
+                .addColumn(new TextTableColumn("CPU Cost", "USD"), cloudlet -> cloudlet.getCostPerSec() * cloudlet.getActualCpuTime())
+                .addColumn(new TextTableColumn("Bandwidth Cost", "USD"), Cloudlet::getAccumulatedBwCost)
+                .addColumn(new TextTableColumn("Total Cost", "USD"), cloudlet -> cloudlet.getTotalCost())
+                .build();
+    }
+    private void onClockTickListener(EventInfo evt) {
+        vmList.forEach(vm ->
+                System.out.printf(
+                        "\t\tTime %6.1f: Vm %d CPU Usage: %6.2f%% (%2d vCPUs. Running Cloudlets: #%d). RAM usage: %.2f%% (%d MB)%n",
+                        evt.getTime(), vm.getId(),
+                        vm.getCloudletScheduler().getCloudletExecList().size(),
+                        vm.getRam().getPercentUtilization()*100, vm.getRam().getAllocatedResource())
+        );
+    }
+    private List<Vm> createAndSubmitVms(DatacenterBroker broker) {
+        final List<Vm> list = new ArrayList<>(VMS);
+        for (int i = 0; i < VMS; i++) {
+            Vm vm =
+                    new VmSimple(1000, VM_PES)
+                            .setRam(512).setBw(1000).setSize(10000)
+                            .setCloudletScheduler(new CloudletSchedulerTimeShared());
+
+            list.add(vm);
+        }
+
+        broker.submitVmList(list);
+
+        return list;
+    }
+
+    private List<Cloudlet> createAndSubmitCloudlets(DatacenterBroker broker) {
+        final List<Cloudlet> list = new ArrayList<>(CLOUDLETS);
+        for (int i = 1; i <= CLOUDLETS; i++) {
+            final UtilizationModel utilization = new UtilizationModelFull();
+            final Cloudlet cloudlet = new CloudletSimple(CLOUDLET_LENGTH, CLOUDLET_PES);
+            cloudlet
+                    .setFileSize(1024)
+                    .setOutputSize(1024)
+                    .setUtilizationModel(utilization);
+            list.add(cloudlet);
+        }
+
+        broker.submitCloudletList(list);
+
+        return list;
     }
     private Datacenter createDatacenter() {
         final List<Host> hostList = new ArrayList<>(HOSTS);
@@ -146,9 +218,12 @@ public class BasicFirstExample {
             Host host = createHost();
             hostList.add(host);
         }
-
+        final VmAllocationPolicyFirstFit allocationPolicy = new VmAllocationPolicyFirstFit();
         //Uses a VmAllocationPolicySimple by default to allocate VMs
-        return new DatacenterSimple(simulation, hostList).setSchedulingInterval(5);
+        return new DatacenterSimple(simulation, hostList, allocationPolicy).setSchedulingInterval(10).getCharacteristics().setCostPerSecond(cost.get(0))
+                .setCostPerMem(cost.get(1))
+                .setCostPerStorage(cost.get(2))
+                .setCostPerBw(cost.get(3)).getDatacenter();
     }
     /**
      * Creates a Datacenter and its Hosts.
@@ -161,7 +236,27 @@ public class BasicFirstExample {
         }
         final VmAllocationPolicyRoundRobin allocationPolicy = new VmAllocationPolicyRoundRobin();
         //Uses a VmAllocationPolicySimple by default to allocate VMs
-        return new DatacenterSimple(simulation1, hostList, allocationPolicy).setSchedulingInterval(5);
+       return new DatacenterSimple(simulation, hostList, allocationPolicy).setSchedulingInterval(10)
+               .getCharacteristics().setCostPerSecond(cost.get(0))
+                .setCostPerMem(cost.get(1))
+                .setCostPerStorage(cost.get(2))
+                .setCostPerBw(cost.get(3))
+                .getDatacenter();
+    }
+    private Datacenter createDatacenter2() {
+        final List<Host> hostList = new ArrayList<>(HOSTS);
+        for(int i = 0; i < HOSTS; i++) {
+            Host host = createHost();
+            hostList.add(host);
+        }
+        final VmAllocationPolicyBestFit allocationPolicy = new VmAllocationPolicyBestFit(this::bestFitHostSelectionPolicy);
+        //Uses a VmAllocationPolicySimple by default to allocate VMs
+        return new DatacenterSimple(simulation1, hostList, allocationPolicy).setSchedulingInterval(5)
+                .getCharacteristics().setCostPerSecond(cost.get(0))
+                .setCostPerMem(cost.get(1))
+                .setCostPerStorage(cost.get(2))
+                .setCostPerBw(cost.get(3))
+                .getDatacenter();
     }
     /**
      * A method that defines a Best Fit policy to select a suitable Host with the least
@@ -217,7 +312,6 @@ public class BasicFirstExample {
      */
     private List<Cloudlet> createCloudlets() {
         final List<Cloudlet> list = new ArrayList<>(CLOUDLETS);
-
         //UtilizationModel defining the Cloudlets use only 50% of any resource all the time
         final UtilizationModelDynamic utilizationModel = new UtilizationModelDynamic(0.5);
         for (int i = 0; i < CLOUDLETS; i++) {
@@ -231,6 +325,8 @@ public class BasicFirstExample {
      * Creates a list of Cloudlets.
      */
     private List<Cloudlet> createCloudlets_dynamic(List<Integer> cloudletLengthList, int size) {
+        /* TODO: Dynamic by executionTime */
+
         final List<Cloudlet> list = new ArrayList<>(CLOUDLETS);
         int cloudlet_length;
         //UtilizationModel defining the Cloudlets use only 50% of any resource all the time
@@ -243,9 +339,31 @@ public class BasicFirstExample {
         }
         return list;
     }
-
-
-
+    private List<Cloudlet> createCloudlets_dynamic2(List<Integer> cloudletLengthList, int size) {
+        final List<Cloudlet> list = new ArrayList<>(CLOUDLETS);
+        int cloudlet_length;
+        //UtilizationModel defining the Cloudlets use only 50% of any resource all the time
+        final UtilizationModelDynamic utilizationModel = new UtilizationModelDynamic(0.99);
+        for (int i = 0; i < CLOUDLETS; i++) {
+            cloudlet_length = (i < size) ? cloudletLengthList.get(i) : cloudletLengthList.get(i % size);
+            final Cloudlet cloudlet = new CloudletSimple(cloudlet_length, CLOUDLET_PES, utilizationModel);
+            cloudlet.setSizes(CLOUDLET_SET_SIZE);
+            list.add(cloudlet);
+        }
+        return list;
+    }
+    private List<Cloudlet> createCloudlets_dynamic3(List<Integer> cloudletLengthList, int size) {
+        final List<Cloudlet> list = new ArrayList<>(CLOUDLETS);
+        int cloudlet_length;
+        //UtilizationModel defining the Cloudlets use only 50% of any resource all the time
+        final UtilizationModelStochastic utilizationModel = new UtilizationModelStochastic();
+        for (int i = 0; i < CLOUDLETS; i++) {
+            cloudlet_length = (i < size) ? cloudletLengthList.get(i) : cloudletLengthList.get(i % size);
+            final Cloudlet cloudlet = new CloudletSimple(cloudlet_length, CLOUDLET_PES, utilizationModel);
+            cloudlet.setSizes(CLOUDLET_SET_SIZE);
+            list.add(cloudlet);
+        }
+        return list;
+    }
 
 }
-

@@ -24,6 +24,7 @@ package HW01.loadBalancer;
  */
 
 
+import HW01.Dynamic.DynamicCreationOfVmsAndCloudletsExample;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicySimple;
@@ -60,6 +61,8 @@ import org.cloudsimplus.autoscaling.resources.ResourceScalingInstantaneous;
 import org.cloudsimplus.builders.tables.CloudletsTableBuilder;
 import org.cloudsimplus.listeners.EventInfo;
 import org.cloudsimplus.listeners.EventListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -121,10 +124,13 @@ public class dynamicLoadBalancing {
     private List<Host> hostList;
     private List<Vm> vmList;
     private List<Cloudlet> cloudletList;
-    
+
    
     
     private int createsVms;
+
+
+    static Logger logger;
 
     public static void main(String[] args) {
         new dynamicLoadBalancing();
@@ -217,6 +223,9 @@ public class dynamicLoadBalancing {
         final long bw = 100000; //in Megabytes
         final long storage = 10000000; //in Megabites/s
         final int id = hostList.size();
+
+        logger = LoggerFactory.getLogger(dynamicLoadBalancing.class);
+        logger.info("Set VM Scheduling");
         return new HostSimple(ram, bw, storage, peList)
             .setRamProvisioner(new ResourceProvisionerSimple())
             .setBwProvisioner(new ResourceProvisionerSimple())

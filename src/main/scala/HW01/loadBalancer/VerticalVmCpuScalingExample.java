@@ -55,6 +55,8 @@ import org.cloudsimplus.autoscaling.resources.ResourceScalingInstantaneous;
 import org.cloudsimplus.builders.tables.CloudletsTableBuilder;
 import org.cloudsimplus.listeners.EventInfo;
 import org.cloudsimplus.listeners.EventListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -117,6 +119,8 @@ public class VerticalVmCpuScalingExample {
     private static final int CLOUDLETS_INITIAL_LENGTH = 20_000;
 
     private int createsVms;
+
+    private static Logger logger;
 
     public static void main(String[] args) {
         new VerticalVmCpuScalingExample();
@@ -214,6 +218,8 @@ public class VerticalVmCpuScalingExample {
         List<Vm> newList = new ArrayList<>(numberOfVms);
         for (int i = 0; i < numberOfVms; i++) {
             Vm vm = createVm();
+            logger = LoggerFactory.getLogger(dynamicLoadBalancing.class);
+            logger.info("CPU Scaling set for vm");
             vm.setPeVerticalScaling(createVerticalPeScaling());
             newList.add(vm);
         }
@@ -266,7 +272,6 @@ public class VerticalVmCpuScalingExample {
          * move the VM from the over or underload condition.
         */
         //verticalCpuScaling.setResourceScaling(new ResourceScalingInstantaneous());
-
         /** Different from the commented line above, the line below implements a ResourceScaling using a Lambda Expression.
          * It is just an example which scales the resource twice the amount defined by the scaling factor
          * defined in the constructor.

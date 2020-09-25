@@ -237,4 +237,24 @@ public class RandomVmAllocationPolicyExample {
 
         return list;
     }
+    private List<Cloudlet> mapCloudlets(List<Cloudlet> cloudletList, List<Vm> VM_list){
+        List<Cloudlet> mapped_cloudlets = new ArrayList<>();
+        List<Double> executionTime = new ArrayList<>();
+        for(Cloudlet c: cloudletList){
+            /* TODO: */
+            mapped_cloudlets.add(c);
+        }
+        return mapped_cloudlets;
+    }
+    private double getMinTimeToExecuteCloudlet(Cloudlet c, List<Vm> VM_list){
+        double minExecutionTime = 0;
+        // Get VMs so cloudlets cannot be exceeded
+        for(Vm v: VM_list){
+            if (v.isSuitableForCloudlet(c))
+                minExecutionTime = Math.min(minExecutionTime, c.getTotalLength() / (v.getTotalMipsCapacity() - v.getTotalCpuMipsUsage()));
+        }
+        // Get Execution time
+        return minExecutionTime;
+    }
 }
+

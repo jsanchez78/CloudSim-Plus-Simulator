@@ -21,6 +21,7 @@ import org.cloudbus.cloudsim.hosts.HostSimple;
 import org.cloudbus.cloudsim.provisioners.ResourceProvisionerSimple;
 import org.cloudbus.cloudsim.resources.Pe;
 import org.cloudbus.cloudsim.resources.PeSimple;
+import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletSchedulerCompletelyFair;
 import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.schedulers.vm.VmSchedulerTimeShared;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModel;
@@ -32,6 +33,8 @@ import org.cloudbus.cloudsim.vms.VmSimple;
 import org.cloudsimplus.builders.tables.CloudletsTableBuilder;
 import org.cloudsimplus.builders.tables.TextTableColumn;
 import org.cloudsimplus.listeners.EventInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import java.util.*;
@@ -89,7 +92,8 @@ public class BasicFirstExample {
     public BasicFirstExample() {
         /*Enables just some level of log messages.
           Make sure to import org.cloudsimplus.util.Log;*/
-        //Log.setLevel(ch.qos.logback.classic.Level.WARN);
+        Logger logger = LoggerFactory.getLogger(BasicFirstExample.class);
+
 
         Config config = ConfigFactory.load("inputs.conf");
         HOSTS = Integer.parseInt(config.getString("jdbc.HOSTS"));
@@ -132,17 +136,15 @@ public class BasicFirstExample {
         broker1 = new DatacenterBrokerSimple(simulation1);
         broker2 = new DatacenterBrokerMaxMin(simulation2);
 
-        vmList = createVms();
-        vmList1 = createVms();
-        vmList2 = createVms();
+        logger.info("LOGGING INFO: Submitting Vms");
+        vmList = createAndSubmitVms(broker0);
+        vmList1 = createAndSubmitVms(broker1);
+        vmList2 = createAndSubmitVms(broker2);
 
+        logger.info("LOGGING INFO: Dynamically Create cloudlet list");
         cloudletList = createCloudlets_dynamic(CLOUDLET_dynamic, CLOUDLET_dynamic.size());
         cloudletList1 = createCloudlets_dynamic2(CLOUDLET_dynamic, CLOUDLET_dynamic.size());
         cloudletList2 = createCloudlets_dynamic3(CLOUDLET_dynamic, CLOUDLET_dynamic.size());
-
-        broker0.submitVmList(vmList);
-        broker1.submitVmList(vmList1);
-        broker2.submitVmList(vmList2);
 
         broker0.submitCloudletList(cloudletList);
         broker1.submitCloudletList(cloudletList1);
@@ -156,19 +158,15 @@ public class BasicFirstExample {
         final List<Cloudlet> finishedCloudlets1 = broker1.getCloudletFinishedList();
         final List<Cloudlet> finishedCloudlets2 = broker2.getCloudletFinishedList();
 
-        new CloudletsTableBuilder(finishedCloudlets).build();
-        new CloudletsTableBuilder(finishedCloudlets1).build();
-        new CloudletsTableBuilder(finishedCloudlets2).build();
-
-        print_cost_statistics(cloudletList);
-        print_cost_statistics(cloudletList1);
-        print_cost_statistics(cloudletList2);
+        print_cost_statistics(finishedCloudlets);
+        print_cost_statistics(finishedCloudlets1);
+        print_cost_statistics(finishedCloudlets2);
     }
     private void print_cost_statistics(List<Cloudlet> cloudletList){
         new CloudletsTableBuilder(cloudletList).setTitle("Simulation Results: Broker0")
                 .addColumn(new TextTableColumn("CPU Cost", "USD"), cloudlet -> cloudlet.getCostPerSec() * cloudlet.getActualCpuTime())
                 .addColumn(new TextTableColumn("Bandwidth Cost", "USD"), Cloudlet::getAccumulatedBwCost)
-                .addColumn(new TextTableColumn("Total Cost", "USD"), cloudlet -> cloudlet.getTotalCost())
+                .addColumn(new TextTableColumn("Total Cost", "USD"), Cloudlet::getTotalCost)
                 .build();
     }
     private void onClockTickListener(EventInfo evt) {
@@ -184,9 +182,9 @@ public class BasicFirstExample {
         final List<Vm> list = new ArrayList<>(VMS);
         for (int i = 0; i < VMS; i++) {
             Vm vm =
-                    new VmSimple(1000, VM_PES)
-                            .setRam(512).setBw(1000).setSize(10000)
-                            .setCloudletScheduler(new CloudletSchedulerTimeShared());
+                    new VmSimple(VM_MIPS, VM_PES)
+                            .setRam(ram).setBw(bw).setSize(VM_STORAGE)
+                            .setCloudletScheduler(new CloudletSchedulerCompletelyFair());
 
             list.add(vm);
         }
@@ -234,7 +232,7 @@ public class BasicFirstExample {
             Host host = createHost();
             hostList.add(host);
         }
-        final VmAllocationPolicyRoundRobin allocationPolicy = new VmAllocationPolicyRoundRobin();
+        final VmAllocationPolicyBestFit allocationPolicy = new VmAllocationPolicyBestFit(this::bestFitHostSelectionPolicy);
         //Uses a VmAllocationPolicySimple by default to allocate VMs
        return new DatacenterSimple(simulation, hostList, allocationPolicy).setSchedulingInterval(10)
                .getCharacteristics().setCostPerSecond(cost.get(0))

@@ -16,5 +16,7 @@ libraryDependencies ++= Seq(
   // Logback logging framework
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-  "org.gnieh" % "logback-config" % "0.3.1"
+  "org.gnieh" % "logback-config" % "0.3.1",
+  //JUnit Testing Framework
+  "junit" % "junit" % "4.13"
 )

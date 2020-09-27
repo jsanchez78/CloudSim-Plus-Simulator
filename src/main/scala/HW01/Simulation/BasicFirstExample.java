@@ -41,6 +41,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 public class BasicFirstExample {
+    private Logger logger;
 
     private final CloudSim simulation;
     private DatacenterBroker broker0;
@@ -111,8 +112,7 @@ public class BasicFirstExample {
     public BasicFirstExample() {
         /*Enables just some level of log messages.
           Make sure to import org.cloudsimplus.util.Log;*/
-        Logger logger = LoggerFactory.getLogger(BasicFirstExample.class);
-
+        logger = LoggerFactory.getLogger(BasicFirstExample.class);
 
         Config config = ConfigFactory.load("inputs.conf");
         HOSTS = Integer.parseInt(config.getString("jdbc.HOSTS"));
@@ -143,9 +143,8 @@ public class BasicFirstExample {
         simulation = new CloudSim();
         simulation1 = new CloudSim();
         simulation2 = new CloudSim();
-
-
-
+    }
+    public void run_simulations(){
         datacenter0 = createDatacenter();
         datacenter1 = createDatacenter1();
         datacenter2 = createDatacenter2();
@@ -180,7 +179,6 @@ public class BasicFirstExample {
         print_cost_statistics(finishedCloudlets);
         print_cost_statistics(finishedCloudlets1);
         print_cost_statistics(finishedCloudlets2);
-
 
         statistics_per_cloudlet(finishedCloudlets);
         statistics_per_cloudlet(finishedCloudlets1);
@@ -404,5 +402,26 @@ public class BasicFirstExample {
         }
         return list;
     }
-
+    /* Getters */
+    public List<Cloudlet> getCloudletList(){
+        return this.cloudletList;
+    }
+    public Datacenter getDatacenter0(){
+        return this.datacenter0;
+    }
+    public Datacenter getDatacenter1(){
+        return this.datacenter1;
+    }
+    public List<Integer> getCost(){
+        return this.cost;
+    }
+    public List<Double> getCostChargingCustomer(){
+        return this.cost_for_customer;
+    }
+    public VmAllocationPolicy getDatacenter0VMAllocationPolicy(){
+        return this.datacenter0.getVmAllocationPolicy();
+    }
+    public VmAllocationPolicy getDatacenter1VMAllocationPolicy(){
+        return this.datacenter1.getVmAllocationPolicy();
+    }
 }

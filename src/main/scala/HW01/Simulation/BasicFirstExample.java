@@ -85,7 +85,7 @@ public class BasicFirstExample {
 
     // Cost
     static List<Integer> cost;
-
+    static List<Double> cost_for_customer;
     public static void main(String[] args) {
         new BasicFirstExample();
     }
@@ -138,7 +138,7 @@ public class BasicFirstExample {
         CLOUDLET_dynamic = config.getIntList("jdbc.CLOUDLET_dynamic");
 
         cost = config.getIntList("jdbc.cost");
-
+        cost_for_customer = config.getDoubleList("jdbc.cost_for_customer");
 
         simulation = new CloudSim();
         simulation1 = new CloudSim();
@@ -195,14 +195,18 @@ public class BasicFirstExample {
     private void statistics_per_cloudlet(List<Cloudlet> cloudletList){
         long AVG_cloudlet_length = cloudletList.stream().map(Cloudlet::getTotalLength).reduce(0L, Long::sum) / cloudletList.size();
         double AVG_total_execution_time = cloudletList.stream().map(cloudlet -> cloudlet.getFinishTime() - cloudlet.getExecStartTime()).reduce(0.00, Double::sum);
-        double AVG_cost_per_cloudlet = cloudletList.stream().map(Cloudlet::getTotalCost).reduce(0.00, Double::sum);
+        double AVG_cost = cloudletList.stream().map(Cloudlet::getTotalCost).reduce(0.00, Double::sum);
         double AVG_CPU_COST = cloudletList.stream().map(cloudlet -> cloudlet.getActualCpuTime() * cloudlet.getCostPerSec()).reduce(0.00, Double::sum);
         double AVG_bw_cost = cloudletList.stream().map(Cloudlet::getCostPerBw).reduce(0.00, Double::sum);
-        System.out.println("\nAVG Execution Total Execution Time: " + AVG_total_execution_time + " seconds" +
+        double total_profit = AVG_cost * cost_for_customer.get(0);
+
+        System.out.println(
+                "\nAVG Execution Total Execution Time: " + AVG_total_execution_time + " seconds" +
                 "\nAVG Cpu Cost: " + "$ " + AVG_CPU_COST +
                 "\nAVG Bandwidth Cost: " + "$ " + AVG_bw_cost +
-                "\nAVG Total Cost " + "$ " + AVG_cost_per_cloudlet +
-                "\nAVG Cloudlet length: " + AVG_cloudlet_length);
+                "\nAVG Total Cost " + "$ " + AVG_cost +
+                "\nAVG Cloudlet length: " + AVG_cloudlet_length +
+                "\nProfit: " + "$ " + total_profit);
     }
     private void onClockTickListener(EventInfo evt) {
         vmList.forEach(vm ->
@@ -235,7 +239,7 @@ public class BasicFirstExample {
             final UtilizationModel utilization = new UtilizationModelFull();
             final Cloudlet cloudlet = new CloudletSimple(CLOUDLET_LENGTH, CLOUDLET_PES);
             cloudlet
-                    .setFileSize(1024)
+                    .setFileSize(1024*i)
                     .setOutputSize(1024)
                     .setUtilizationModel(utilization);
             list.add(cloudlet);
@@ -253,7 +257,8 @@ public class BasicFirstExample {
         }
         final VmAllocationPolicyFirstFit allocationPolicy = new VmAllocationPolicyFirstFit();
         //Uses a VmAllocationPolicySimple by default to allocate VMs
-        return new DatacenterSimple(simulation, hostList, allocationPolicy).setSchedulingInterval(10).getCharacteristics().setCostPerSecond(cost.get(0))
+        return new DatacenterSimple(simulation, hostList, allocationPolicy).setSchedulingInterval(10).getCharacteristics()
+                .setCostPerSecond(cost.get(0))
                 .setCostPerMem(cost.get(1))
                 .setCostPerStorage(cost.get(2))
                 .setCostPerBw(cost.get(3))

@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+import java.text.DecimalFormat;
 import java.util.*;
 
 public class BasicFirstExample {
@@ -88,7 +89,25 @@ public class BasicFirstExample {
     public static void main(String[] args) {
         new BasicFirstExample();
     }
-
+    /*
+    *
+    *   Simulations Run:
+    *
+    *   Set1:
+    *       DynamicUtilization => 0.50
+    *       VMAllocation Policy: RandomFit
+    *
+    *       DynamicUtilization => 0.99
+    *       VMAllocation Policy: BestFit
+    *
+    *   Set2:
+    *
+    *   Set3:
+    *
+    *
+    *
+    *
+    * */
     public BasicFirstExample() {
         /*Enables just some level of log messages.
           Make sure to import org.cloudsimplus.util.Log;*/
@@ -164,9 +183,9 @@ public class BasicFirstExample {
     }
     private void print_cost_statistics(List<Cloudlet> cloudletList){
         new CloudletsTableBuilder(cloudletList).setTitle("Simulation Results: Broker0")
-                .addColumn(new TextTableColumn("CPU Cost", "USD"), cloudlet -> cloudlet.getCostPerSec() * cloudlet.getActualCpuTime())
+                .addColumn(new TextTableColumn("CPU Cost", "USD"), cloudlet -> new DecimalFormat("#.000").format(cloudlet.getActualCpuTime() * cloudlet.getCostPerSec()))
                 .addColumn(new TextTableColumn("Bandwidth Cost", "USD"), Cloudlet::getAccumulatedBwCost)
-                .addColumn(new TextTableColumn("Total Cost", "USD"), Cloudlet::getTotalCost)
+                .addColumn(new TextTableColumn("Total Cost", "USD"), cloudlet -> new DecimalFormat("#.000").format(cloudlet.getTotalCost()))
                 .build();
     }
     private void onClockTickListener(EventInfo evt) {

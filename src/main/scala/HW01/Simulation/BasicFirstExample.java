@@ -180,6 +180,10 @@ public class BasicFirstExample {
         print_cost_statistics(finishedCloudlets);
         print_cost_statistics(finishedCloudlets1);
         print_cost_statistics(finishedCloudlets2);
+
+
+        statistics_per_cloudlet(finishedCloudlets);
+        statistics_per_cloudlet(finishedCloudlets1);
     }
     private void print_cost_statistics(List<Cloudlet> cloudletList){
         new CloudletsTableBuilder(cloudletList).setTitle("Simulation Results: Broker0")
@@ -187,6 +191,18 @@ public class BasicFirstExample {
                 .addColumn(new TextTableColumn("Bandwidth Cost", "USD"), Cloudlet::getAccumulatedBwCost)
                 .addColumn(new TextTableColumn("Total Cost", "USD"), cloudlet -> new DecimalFormat("#.000").format(cloudlet.getTotalCost()))
                 .build();
+    }
+    private void statistics_per_cloudlet(List<Cloudlet> cloudletList){
+        long AVG_cloudlet_length = cloudletList.stream().map(Cloudlet::getTotalLength).reduce(0L, Long::sum) / cloudletList.size();
+        double AVG_total_execution_time = cloudletList.stream().map(cloudlet -> cloudlet.getFinishTime() - cloudlet.getExecStartTime()).reduce(0.00, Double::sum);
+        double AVG_cost_per_cloudlet = cloudletList.stream().map(Cloudlet::getTotalCost).reduce(0.00, Double::sum);
+        double AVG_CPU_COST = cloudletList.stream().map(cloudlet -> cloudlet.getActualCpuTime() * cloudlet.getCostPerSec()).reduce(0.00, Double::sum);
+        double AVG_bw_cost = cloudletList.stream().map(Cloudlet::getCostPerBw).reduce(0.00, Double::sum);
+        System.out.println("\nAVG Execution Total Execution Time: " + AVG_total_execution_time + " seconds" +
+                "\nAVG Cpu Cost: " + "$ " + AVG_CPU_COST +
+                "\nAVG Bandwidth Cost: " + "$ " + AVG_bw_cost +
+                "\nAVG Total Cost " + "$ " + AVG_cost_per_cloudlet +
+                "\nAVG Cloudlet length: " + AVG_cloudlet_length);
     }
     private void onClockTickListener(EventInfo evt) {
         vmList.forEach(vm ->
@@ -240,7 +256,8 @@ public class BasicFirstExample {
         return new DatacenterSimple(simulation, hostList, allocationPolicy).setSchedulingInterval(10).getCharacteristics().setCostPerSecond(cost.get(0))
                 .setCostPerMem(cost.get(1))
                 .setCostPerStorage(cost.get(2))
-                .setCostPerBw(cost.get(3)).getDatacenter();
+                .setCostPerBw(cost.get(3))
+                .getDatacenter();
     }
     /**
      * Creates a Datacenter and its Hosts.

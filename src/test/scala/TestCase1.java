@@ -1,19 +1,12 @@
 import HW01.Simulation.BasicFirstExample;
-import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyBestFit;
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyFirstFit;
-import org.cloudbus.cloudsim.cloudlets.Cloudlet;
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.List;
 
 import static org.junit.Assert.*;
 
 public class TestCase1 {
-    private List<Cloudlet> cloudletList;
     BasicFirstExample simulation = new BasicFirstExample();
     @Test
     public void compare_cost_and_profit(){

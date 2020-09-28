@@ -46,3 +46,10 @@ To install this package into a project:
 ![](./src/screenshots/sbtcleancompile.png)
 ![](./src/screenshots/simulationResults.png)
 ![](./src/screenshots/simulationStatistics.png)
+
+## References
+* [CloudSim Plus API](http://cloudsimplus.org/) 
+* [CloudSim Plus Vertical CPU Scaling Example](https://github.com/manoelcampos/cloudsim-plus/blob/master/cloudsim-plus-examples/src/main/java/org/cloudsimplus/examples/autoscaling/VerticalVmCpuScalingExample.java)
+* [Lightbend Configuration](https://github.com/lightbend/config)
+* [SLF4J Logging](http://slf4j.org/manual.html)
+* [sbt Reference Manual](https://www.scala-sbt.org/1.x/docs/)

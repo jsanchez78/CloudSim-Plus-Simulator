@@ -39,10 +39,6 @@ public class TestCase1 {
         simulation.run_simulations();
         assertEquals(simulation.getDatacenter0VMAllocationPolicy().getClass(), VmAllocationPolicyFirstFit.class);
     }
-    @Test
-    public void VMAllocationPolicyBestFit(){
-
-    }
     @AfterClass
     public static void simulation_non_empty(){
         BasicFirstExample simulation = new BasicFirstExample();

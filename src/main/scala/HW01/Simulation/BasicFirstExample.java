@@ -222,12 +222,9 @@ public class BasicFirstExample {
                     new VmSimple(VM_MIPS, VM_PES)
                             .setRam(ram).setBw(bw).setSize(VM_STORAGE)
                             .setCloudletScheduler(new CloudletSchedulerCompletelyFair());
-
             list.add(vm);
         }
-
         broker.submitVmList(list);
-
         return list;
     }
 

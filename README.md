@@ -4,9 +4,10 @@
 
 ## Description 
 In this project, I analyze various cloud architectures with multiple datacenters from the perspective of a cloud computing broker.
-Each Virtual Machine houses Cloudlets with different allocation policies, BestFit and FirstFit. Various utilization models are used for cloudlets, from stochastic models to using the entire cloudlet resource until full.
-An analysis and computational statistics 
-are done to differentiate the various pros and cons across different cloud architectures.
+Cloudlets are assigned to Virtual Machines via time - shared and space - shared schedulers for comparison.
+Each Virtual Machine houses Cloudlets with different allocation policies, BestFit and FirstFit. 
+Various utilization models are used for cloudlets, from stochastic models to using the entire cloudlet resource until full.
+An analysis and computational statistics are done to differentiate the various pros and cons across different cloud architectures.
 
 ## Installation
 
@@ -34,6 +35,7 @@ To install this package into a project:
     ```
     sbt clean compile run  
     ```  
+   
 ## Cloud Simulation Architecture 
 
 ## Virtual Memory Allocation Policies 

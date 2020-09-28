@@ -35,12 +35,19 @@ To install this package into a project:
     ```
     sbt clean compile run  
     ```  
-   
+## Usage Details
+Place your [Input Parameters for your cloud architecture](https://github.com/lightbend/config) in the configuration file loacted here: `./src/main/resources/inputs.conf` 
+### Configuration
+
 ## Cloud Simulation Architecture 
 
 ## Virtual Memory Allocation Policies 
 
 ## Load Balancing 
+
+### Max Min Algorithm
+This load balancing algorithm is used by a data center broker to place Cloudlets onto available Virtual Machines.
+The algorithm prioritizes cloudlets with smaller execution time over larger cloudlets and assigns them to Virtual Machines first.
 
 ## Simulation Results and Analysis
 ![](./src/screenshots/sbtcleancompile.png)

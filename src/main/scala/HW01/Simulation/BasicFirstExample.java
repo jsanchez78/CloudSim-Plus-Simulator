@@ -1,6 +1,5 @@
 package HW01.Simulation;
 
-import HW01.Allocation.Policies.VMAllocation.VmAllocationPolicyRoundRobin;
 import HW01.Brokers.DatacenterBrokerMaxMin;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -22,7 +21,6 @@ import org.cloudbus.cloudsim.provisioners.ResourceProvisionerSimple;
 import org.cloudbus.cloudsim.resources.Pe;
 import org.cloudbus.cloudsim.resources.PeSimple;
 import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletSchedulerCompletelyFair;
-import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.schedulers.vm.VmSchedulerTimeShared;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModel;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelDynamic;
@@ -115,30 +113,29 @@ public class BasicFirstExample {
         logger = LoggerFactory.getLogger(BasicFirstExample.class);
 
         Config config = ConfigFactory.load("inputs.conf");
-        HOSTS = Integer.parseInt(config.getString("jdbc.HOSTS"));
-        HOST_PES = Integer.parseInt(config.getString("jdbc.HOST_PES"));
-        HOST_ram = Integer.parseInt(config.getString("jdbc.HOST_ram"));
-        HOST_bw = Integer.parseInt(config.getString("jdbc.HOST_bw"));
-        HOST_MIPS = Integer.parseInt(config.getString("jdbc.HOST_MIPS"));
+        HOSTS = Integer.parseInt(config.getString("architecture0.HOSTS"));
+        HOST_PES = Integer.parseInt(config.getString("architecture0.HOST_PES"));
+        HOST_ram = Integer.parseInt(config.getString("architecture0.HOST_ram"));
+        HOST_bw = Integer.parseInt(config.getString("architecture0.HOST_bw"));
+        HOST_MIPS = Integer.parseInt(config.getString("architecture0.HOST_MIPS"));
 
-        VMS = Integer.parseInt(config.getString("jdbc.VMS"));
-        VM_PES = Integer.parseInt(config.getString("jdbc.VM_PES"));
-        bw = Integer.parseInt(config.getString("jdbc.bw"));; //in Megabits/s
-        ram = Integer.parseInt(config.getString("jdbc.ram")); //in Megabytes
-        VM_MIPS = Integer.parseInt(config.getString("jdbc.VM_MIPS"));
-        VM_STORAGE = Integer.parseInt(config.getString("jdbc.VM_STORAGE"));
+        VMS = Integer.parseInt(config.getString("architecture0.VMS"));
+        VM_PES = Integer.parseInt(config.getString("architecture0.VM_PES"));
+        bw = Integer.parseInt(config.getString("architecture0.bw"));; //in Megabits/s
+        ram = Integer.parseInt(config.getString("architecture0.ram")); //in Megabytes
+        VM_MIPS = Integer.parseInt(config.getString("architecture0.VM_MIPS"));
+        VM_STORAGE = Integer.parseInt(config.getString("architecture0.VM_STORAGE"));
 
-        CLOUDLETS = Integer.parseInt(config.getString("jdbc.CLOUDLETS"));
-        CLOUDLET_PES = Integer.parseInt(config.getString("jdbc.CLOUDLET_PES"));
-        CLOUDLET_LENGTH = Integer.parseInt(config.getString("jdbc.CLOUDLET_LENGTH"));
-        storage = Integer.parseInt(config.getString("jdbc.storage"));
+        CLOUDLETS = Integer.parseInt(config.getString("architecture0.CLOUDLETS"));
+        CLOUDLET_PES = Integer.parseInt(config.getString("architecture0.CLOUDLET_PES"));
+        CLOUDLET_LENGTH = Integer.parseInt(config.getString("architecture0.CLOUDLET_LENGTH"));
+        storage = Integer.parseInt(config.getString("architecture0.storage"));
 
+        CLOUDLET_SET_SIZE = VM_STORAGE = Integer.parseInt(config.getString("architecture0.CLOUDLET_SET_SIZE"));
+        CLOUDLET_dynamic = config.getIntList("architecture0.CLOUDLET_dynamic");
 
-        CLOUDLET_SET_SIZE = VM_STORAGE = Integer.parseInt(config.getString("jdbc.CLOUDLET_SET_SIZE"));
-        CLOUDLET_dynamic = config.getIntList("jdbc.CLOUDLET_dynamic");
-
-        cost = config.getIntList("jdbc.cost");
-        cost_for_customer = config.getDoubleList("jdbc.cost_for_customer");
+        cost = config.getIntList("architecture0.cost");
+        cost_for_customer = config.getDoubleList("architecture0.cost_for_customer");
 
         simulation = new CloudSim();
         simulation1 = new CloudSim();
